@@ -1,0 +1,77 @@
+import datetime
+
+def solve(r,n,p):
+
+	start = datetime.datetime.strptime(r, '%H:%M:%S')
+
+	ans = []
+
+	for i in p:
+
+		ends = datetime.datetime.strptime(i, '%H:%M:%S')
+
+		diff = start - ends
+
+		hours = int(diff.seconds // (60 * 60))
+
+		mins = int((diff.seconds // 60) % 60)
+
+		sec = int(diff.seconds)
+
+		if(hours==0 and mins==0 and sec==0):
+
+			print("now")
+
+ 
+
+		elif(hours != 0):
+
+			print(hours,end=" ")
+
+			if(hours==1):
+
+				print("hour ago")
+
+			else:
+
+				print("hours ago")
+
+ 
+
+		elif(mins != 0):
+
+			print(mins,end=" ")
+
+			if(mins==1):
+
+				print("minute ago ")
+
+			else:
+
+				print("minutes ago")
+
+		else:
+
+			print(sec,end=" ")
+
+			if(sec==1):
+
+				print("second ago")
+
+			else:
+
+				print("seconds ago")
+
+	return
+
+r = input()
+
+n = int(input())
+
+p = []
+
+for _ in range(n):
+
+	p.append(input())
+
+out = solve(r,n,p)
