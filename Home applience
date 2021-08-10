@@ -1,0 +1,41 @@
+import mysql.connector
+mydb = mysql.connector.connect(
+    host="localhost", user="root", passwd="Yamaha@Rx100", database='home_appliences')
+mycursor = mydb.cursor()
+
+
+class check_info:
+    def __init__(self, customer_Name, password):
+        self.customer_Name = customer_Name
+        self.password = password
+
+    def exits_user(self):
+        mycursor.execute(
+            'select customer_id,customer_name,password from customer_details1 where customer_name like %s', (self.customer_Name,))
+        details = mycursor.fetchall()
+        for i in details:
+            if i[1] == self.customer_Name and i[2] == self.password:
+                return 1
+
+
+class type_of_service:
+    def service(self):
+        mycursor.execute('select list_of_service from selecting_service')
+        service_details = mycursor.fetchall()
+        for i in service_details:
+            print('*', i[0])
+if __name__ == '__main__':
+    customer_Name = input('enter user name')
+    password = input('enter ur password')
+    check = check_info(customer_Name, password)
+    checking = check.exits_user()
+    if checking == 1:
+        print('exit user')
+        typeofservice = type_of_service()
+        service1 = typeofservice.service()
+    else:
+        phone_no = int(input('enter ur phone no'))
+        email = input('enter ur email')
+        mycursor.execute('insert into customer_details1(customer_name,password,phone_no,email) values(%s,%s,%s,%s)',
+                         (customer_Name, password, phone_no, email,))
+        mydb.commit()
