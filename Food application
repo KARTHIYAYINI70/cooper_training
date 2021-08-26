@@ -1,0 +1,157 @@
+import mysql.connector
+from datetime import *
+mydb=mysql.connector.connect(host="localhost",user="root",password="_Sivakumar18",database="_food")
+mycursor=mydb.cursor()
+class customer_details:
+    def __init__(self,customerName,password):
+        self.customerName=customerName
+        self.password=password
+    def check_info(self):
+        mycursor.execute('select customer_id, customer_name,password from customer_details where customer_name
+like %s',(self.customerName,))
+        details = mycursor.fetchall()
+        for i in details:
+            if i[1] == self.customerName and i[2] == self.password:
+                return i[0]
+class hotel:
+    def HotelDetails(self):
+        mycursor.execute('select hotel_name,address from hotel_details')
+        gathered=mycursor.fetchall()
+        for i in gathered:
+            print("*",i[0],i[1])
+        selecting=input("which hotel do you want?:")
+        print(selecting)
+class food:
+    def _fooditems(self):
+        mycursor.execute('select category from food_items')
+        category=mycursor.fetchall()
+        for i in category:
+            print("*",i[0])
+        electing=input("enter ur choice:")
+        mycursor.execute('select food_name,price from food_items where category like %s',(electing,))
+        menu=mycursor.fetchall()
+        for i in menu:
+            print("food name:",i[0]," ","price:",i[1])
+class cart:
+    def __init__(self,customer_id):
+        self.customer_id=customer_id
+    def addItemstocart(self):
+        while True:
+            Addanitem=input('Do you want to add an item into your cart? If so,please enter y-> Yes or n->no')
+            if Addanitem=='y':
+                item_name=input("enter your item name:")
+                quantity=int(input("enter your quantity:"))
+                mycursor.execute('select food_id,price from food_items where food_name like %s',(item_name,))
+                fetchedDetails=mycursor.fetchall()
+                for i in fetchedDetails:
+                    foood= i[0]
+                    total_amount=i[1]*quantity
+                mycursor.execute('insert into cart_details(customer_id,food_id,quantity,total_cost)
+                  values(%s,%s,%s,%s)',(self.customer_id,foood,quantity,total_amount,))
+                mydb.commit()
+                print("sucessfully added to your cart")
+            else:
+                break
+class order:
+    def __init__(self,customer_id):
+        self.customer_id=customer_id
+    def orderTheitems(self):
+        print('do you want to order the items?')
+        orderTheItems=input('y->yes or n->no')
+        if orderTheItems=='y':
+            mycursor.execute('select cart_details.cart_id,food_items.food_name,cart_details.
+quantity,cart_details.total_cost from cart_details inner join food_items on cart_details.food_id=food_
+items.food_id where customer_id like %s',(self.customer_id,))
+            cartItems=mycursor.fetchall()
+            for i in range(len(cartItems)):
+                rowItems=cartItems[i]
+                print('cart item',i+1,'.', 'item_name:',rowItems[1], 'quantity:',rowItems[2],'
+total_cost:',rowItems[3])
+            while True:
+                cartItemOPtion=int(input('enter the option you like to order or type to exit from order'))
+                if cartItemOPtion==0:
+                    break
+                elif cartItemOPtion!=0:
+                    cartId=cartItems[cartItemOPtion-1][0]
+                    paymentMethod=input('what is your payment method,1.online or 2.cod(cash on delivery)')
+                    now=datetime.now()
+                    formattedDate=now.strftime('%y-%m-%d %H:%M:%S')
+                    if paymentMethod=='online':
+                        accountHoldername=input("enter your account holder name:")
+                        accountnumber=int(input("enter your account number:"))
+                        month=int(input("enter your account valid month:"))
+                        year=int(input("enter your account valid year:"))
+                        ccv=int(input("enter your account valid ccv:"))
+                        address=input("enter your delivery address:")
+                        mycursor.execute('insert into order_details(cart_id,payment_
+method,ordered_time,address) values(%s,%s,%s,%s)',(cartId,paymentMethod,formattedDate,address,))
+                        mydb.commit()
+                    else:
+                        address = input("enter your address:")
+                        mycursor.execute('insert into order_details(cart_id,payment_
+method,ordered_time,address) values(%s,%s,%s,%s)',
+                            (cartId, paymentMethod,formattedDate, address,))
+                        mydb.commit()
+class deliveryman:
+    def deliveryman_details(self):
+        deliveryman_name=input("enter your name:")
+        deliveryman_password=input("enter your password:")
+        deliveryman_phone_no=int(input("enter your phone_no:"))
+        mycursor.execute('select order_id from order_details')
+        v=mycursor.fetchall()
+        for i in v:
+            order_id=i[0]
+        mycursor.execute('insert into deliveryman_details( order_id,deliveryman_name,deliveryman_password,
+deliveryman_phone_no) values(%s,%s,%s,%s)',(order_id,deliveryman_name,deliveryman_
+password,deliveryman_phone_no))
+        mydb.commit()
+    def visiting(self):
+        mycursor.execute('select * from deliveryman_details')
+        s=mycursor.fetchall()
+        for i in s:
+            print("deliveryman id:",i[0]," ","order_id:",i[1]," ","deliveryman_name:",i[2])
+if __name__=='__main__':
+    who_you_are=input("Are u admin/user/deliveryman press 1->user 2->admin 3->deliveryman :")
+        if who_you_are=='1':
+        customerName = input("enter name:")
+        password = input("enter password:")
+        checking = customer_details(customerName, password)
+        check = checking.check_info()
+        if check:
+            print("exist user")
+            hotels = hotel()
+            hotels.HotelDetails()
+            foods = food()
+            foods._fooditems()
+            carts = cart(check)
+            carts.addItemstocart()
+            orders = order(check)
+            orders.orderTheitems()
+        else:
+            email_id = input("enter mail:")
+            phone_no = int(input("enter phone number:"))
+            address = input("enter address:")
+            mycursor.execute(
+                "insert into customer_details(customer_name,password,email_id,phone_no,address)
+values(%s,%s,%s,%s,%s)",
+                (customerName, password, email_id, phone_no, address,))
+            mydb.commit()
+    elif who_you_are=="2":
+        admin_name=input("enter your name:")
+        admin_password=input("enter your password:")
+        admin_mail = input("enter your mail:")
+        if ((admin_name=="dhivya" and admin_password=='xyz' and admin_mail=="abc@gmail.com") or
+(admin_name=="dinesh" and admin_password=='123' and admin_mail=='admin@gmail.com')):
+            mycursor.execute(
+                'insert into admin_details(admin_name,admin_password,admin_mail) values(%s,%s,%s)',
+                 (admin_name, admin_password, admin_mail, ))
+            mydb.commit()
+            cus=deliveryman()
+            cus.visiting()
+        else:
+            print('you are not admin')
+    elif who_you_are=="3":
+        dels=deliveryman()
+        dels.deliveryman_details()
+
+
